@@ -1,0 +1,888 @@
+class SpinTheWheel {
+  constructor() {
+    this.canvas = document.getElementById("wheelCanvas");
+    this.ctx = this.canvas.getContext("2d");
+    this.options = [];
+    this.colors = [
+      "#FF6B6B",
+      "#4ECDC4",
+      "#45B7D1",
+      "#96CEB4",
+      "#FFEAA7",
+      "#DDA0DD",
+      "#98D8C8",
+      "#F7DC6F",
+      "#BB8FCE",
+      "#85C1E9",
+      "#F8C471",
+      "#82E0AA",
+      "#F1948A",
+      "#D7BDE2",
+      "#FF9F43",
+      "#A8E6CF",
+      "#FFD3B6",
+      "#FF8B94",
+      "#C7CEEA",
+      "#B8F2E6",
+      "#FFA07A",
+      "#98FB98",
+      "#DDA0DD",
+      "#87CEEB",
+      "#F0E68C",
+      "#E6E6FA",
+      "#FFA500",
+      "#98FF98",
+      "#FF69B4",
+      "#AFEEEE",
+      "#FFB6C1",
+      "#ADD8E6",
+      "#F08080",
+      "#90EE90",
+      "#FFE4B5",
+      "#B0C4DE",
+      "#F0FFF0",
+      "#FFC0CB",
+      "#E0FFFF",
+      "#FFDAB9",
+      "#D8BFD8",
+      "#F5DEB3",
+      "#FAFAD2",
+      "#E6E6FA",
+      "#FFE4E1",
+      "#F0F8FF",
+      "#F5F5DC",
+      "#FDF5E6",
+      "#F0FFFF",
+      "#F5FFFA",
+    ];
+    this.isSpinning = false;
+    this.currentRotation = 0;
+    this.statistics = {};
+    this.selectionMode = false;
+    this.selectedOptions = new Set();
+    this.currentWinner = null;
+
+    this.initializeElements();
+    this.bindEvents();
+    this.loadSavedWheels();
+    this.loadStatistics();
+    this.loadSettings();
+    this.drawWheel();
+
+    // Add some default options if none exist
+    if (this.options.length === 0) {
+      this.addDefaultOptions();
+    }
+  }
+
+  initializeElements() {
+    this.optionInput = document.getElementById("optionInput");
+    this.addOptionBtn = document.getElementById("addOption");
+    this.optionsList = document.getElementById("optionsList");
+    this.spinBtn = document.getElementById("spinButton");
+    this.resultText = document.getElementById("resultText");
+    this.resultDisplay = document.getElementById("resultDisplay");
+    this.clearAllBtn = document.getElementById("clearAll");
+    this.saveWheelBtn = document.getElementById("saveWheel");
+    this.loadWheelBtn = document.getElementById("loadWheel");
+    this.savedWheelsContainer = document.getElementById("savedWheels");
+    this.statsDisplay = document.getElementById("statsDisplay");
+    this.clearStatsBtn = document.getElementById("clearStats");
+
+    // Bulk selection elements
+    this.toggleSelectionBtn = document.getElementById("toggleSelection");
+    this.bulkControls = document.getElementById("bulkControls");
+    this.selectAllBtn = document.getElementById("selectAll");
+    this.deselectAllBtn = document.getElementById("deselectAll");
+    this.removeSelectedBtn = document.getElementById("removeSelected");
+    this.selectedCount = document.getElementById("selectedCount");
+
+    // Settings elements
+    this.removeAfterWinCheckbox = document.getElementById("removeAfterWin");
+
+    // Modal elements
+    this.saveModal = document.getElementById("saveModal");
+    this.wheelNameInput = document.getElementById("wheelName");
+    this.confirmSaveBtn = document.getElementById("confirmSave");
+    this.cancelSaveBtn = document.getElementById("cancelSave");
+    this.closeModal = document.querySelector(".close");
+
+    // Remove winner modal elements
+    this.removeWinnerModal = document.getElementById("removeWinnerModal");
+    this.winnerColorDisplay = document.getElementById("winnerColorDisplay");
+    this.winnerNameDisplay = document.getElementById("winnerNameDisplay");
+    this.removeWinnerBtn = document.getElementById("removeWinner");
+    this.keepWinnerBtn = document.getElementById("keepWinner");
+
+    // Toast
+    this.toast = document.getElementById("toast");
+    this.toastMessage = document.getElementById("toastMessage");
+  }
+
+  bindEvents() {
+    this.addOptionBtn.addEventListener("click", () => this.addOption());
+    this.optionInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") this.addOption();
+    });
+
+    this.spinBtn.addEventListener("click", () => this.spin());
+    this.clearAllBtn.addEventListener("click", () => this.clearAllOptions());
+    this.saveWheelBtn.addEventListener("click", () => this.showSaveModal());
+    this.loadWheelBtn.addEventListener("click", () => this.showLoadOptions());
+    this.clearStatsBtn.addEventListener("click", () => this.clearStatistics());
+
+    // Bulk selection events
+    this.toggleSelectionBtn.addEventListener("click", () =>
+      this.toggleSelectionMode()
+    );
+    this.selectAllBtn.addEventListener("click", () => this.selectAllOptions());
+    this.deselectAllBtn.addEventListener("click", () =>
+      this.deselectAllOptions()
+    );
+    this.removeSelectedBtn.addEventListener("click", () =>
+      this.removeSelectedOptions()
+    );
+
+    // Modal events
+    this.confirmSaveBtn.addEventListener("click", () => this.saveWheel());
+    this.cancelSaveBtn.addEventListener("click", () => this.hideSaveModal());
+    this.closeModal.addEventListener("click", () => this.hideSaveModal());
+
+    // Close modal when clicking outside
+    this.saveModal.addEventListener("click", (e) => {
+      if (e.target === this.saveModal) this.hideSaveModal();
+    });
+
+    // Remove winner modal events
+    this.removeWinnerBtn.addEventListener("click", () =>
+      this.confirmRemoveWinner()
+    );
+    this.keepWinnerBtn.addEventListener("click", () =>
+      this.hideRemoveWinnerModal()
+    );
+
+    // Close remove winner modal when clicking outside
+    this.removeWinnerModal.addEventListener("click", (e) => {
+      if (e.target === this.removeWinnerModal) this.hideRemoveWinnerModal();
+    });
+
+    // Settings events
+    this.removeAfterWinCheckbox.addEventListener("change", () =>
+      this.saveSettings()
+    );
+  }
+
+  addDefaultOptions() {
+    const defaultOptions = ["Option 1", "Option 2", "Option 3", "Option 4"];
+    defaultOptions.forEach((option) => {
+      this.options.push({
+        text: option,
+        color: this.colors[this.options.length % this.colors.length],
+      });
+    });
+    this.updateOptionsDisplay();
+    this.drawWheel();
+  }
+
+  addOption() {
+    const textInput = this.optionInput.value.trim();
+    if (textInput === "") {
+      this.showToast("Please enter an option", "error");
+      return;
+    }
+
+    // Split input by newlines and filter out empty lines
+    const optionsToAdd = textInput
+      .split("\n")
+      .map((text) => text.trim())
+      .filter((text) => text !== "");
+
+    let addedCount = 0;
+    let duplicateCount = 0;
+
+    for (const text of optionsToAdd) {
+      // Check for duplicates
+      if (
+        this.options.some(
+          (option) => option.text.toLowerCase() === text.toLowerCase()
+        )
+      ) {
+        duplicateCount++;
+        continue;
+      }
+
+      // Check if we've reached the maximum limit
+      if (this.options.length >= 50) {
+        this.showToast(
+          `Maximum limit of 50 options reached. Added ${addedCount} options.`,
+          "warning"
+        );
+        break;
+      }
+
+      const option = {
+        text: text,
+        color: this.colors[this.options.length % this.colors.length],
+      };
+
+      this.options.push(option);
+      addedCount++;
+    }
+
+    this.optionInput.value = "";
+    this.updateOptionsDisplay();
+    this.drawWheel();
+
+    if (addedCount > 0) {
+      this.showToast(
+        `Successfully added ${addedCount} option${addedCount > 1 ? "s" : ""}${
+          duplicateCount > 0
+            ? `. ${duplicateCount} duplicate${
+                duplicateCount > 1 ? "s" : ""
+              } skipped.`
+            : ""
+        }`,
+        "success"
+      );
+    } else if (duplicateCount > 0) {
+      this.showToast(
+        `No new options added. ${duplicateCount} duplicate${
+          duplicateCount > 1 ? "s" : ""
+        } found.`,
+        "warning"
+      );
+    }
+  }
+
+  removeOption(index) {
+    if (this.isSpinning) return;
+
+    this.options.splice(index, 1);
+    this.selectedOptions.clear(); // Clear selections when removing individual options
+    this.updateOptionsDisplay();
+    this.drawWheel();
+    this.showToast("Option removed", "info");
+  }
+
+  toggleSelectionMode() {
+    if (this.isSpinning) return;
+
+    this.selectionMode = !this.selectionMode;
+    this.selectedOptions.clear();
+
+    if (this.selectionMode) {
+      this.toggleSelectionBtn.innerHTML =
+        '<i class="fas fa-times"></i> Exit Select';
+      this.toggleSelectionBtn.className = "btn btn-danger";
+      this.bulkControls.style.display = "block";
+      this.bulkControls.classList.add("active");
+      this.showToast(
+        "Selection mode enabled - click options to select",
+        "info"
+      );
+    } else {
+      this.toggleSelectionBtn.innerHTML =
+        '<i class="fas fa-check-square"></i> Select Mode';
+      this.toggleSelectionBtn.className = "btn btn-primary";
+      this.bulkControls.style.display = "none";
+      this.bulkControls.classList.remove("active");
+      this.showToast("Selection mode disabled", "info");
+    }
+
+    this.updateOptionsDisplay();
+  }
+
+  toggleOption(index) {
+    if (!this.selectionMode || this.isSpinning) return;
+
+    if (this.selectedOptions.has(index)) {
+      this.selectedOptions.delete(index);
+    } else {
+      this.selectedOptions.add(index);
+    }
+
+    this.updateOptionsDisplay();
+  }
+
+  selectAllOptions() {
+    if (!this.selectionMode || this.isSpinning) return;
+
+    this.selectedOptions.clear();
+    for (let i = 0; i < this.options.length; i++) {
+      this.selectedOptions.add(i);
+    }
+
+    this.updateOptionsDisplay();
+    this.showToast(`Selected all ${this.options.length} options`, "success");
+  }
+
+  deselectAllOptions() {
+    if (!this.selectionMode || this.isSpinning) return;
+
+    this.selectedOptions.clear();
+    this.updateOptionsDisplay();
+    this.showToast("Deselected all options", "info");
+  }
+
+  removeSelectedOptions() {
+    if (
+      !this.selectionMode ||
+      this.isSpinning ||
+      this.selectedOptions.size === 0
+    )
+      return;
+
+    const selectedCount = this.selectedOptions.size;
+    const remainingCount = this.options.length - selectedCount;
+
+    if (remainingCount < 2) {
+      this.showToast(
+        "Cannot remove selected options - at least 2 options must remain",
+        "error"
+      );
+      return;
+    }
+
+    if (
+      !confirm(
+        `Remove ${selectedCount} selected option${
+          selectedCount > 1 ? "s" : ""
+        }?`
+      )
+    ) {
+      return;
+    }
+
+    // Convert Set to Array and sort in descending order to avoid index issues
+    const sortedIndices = Array.from(this.selectedOptions).sort(
+      (a, b) => b - a
+    );
+
+    // Remove options from highest index to lowest
+    sortedIndices.forEach((index) => {
+      this.options.splice(index, 1);
+    });
+
+    this.selectedOptions.clear();
+    this.updateOptionsDisplay();
+    this.drawWheel();
+    this.showToast(
+      `Removed ${selectedCount} option${selectedCount > 1 ? "s" : ""}`,
+      "success"
+    );
+  }
+
+  updateSelectedCount() {
+    if (this.selectedCount) {
+      const count = this.selectedOptions.size;
+      this.selectedCount.textContent = `${count} selected`;
+
+      // Enable/disable remove button based on selection
+      if (this.removeSelectedBtn) {
+        this.removeSelectedBtn.disabled =
+          count === 0 || this.options.length - count < 2;
+      }
+    }
+  }
+
+  updateOptionsDisplay() {
+    this.optionsList.innerHTML = "";
+
+    this.options.forEach((option, index) => {
+      const optionItem = document.createElement("div");
+      optionItem.className = `option-item ${
+        this.selectionMode ? "selection-mode" : ""
+      } ${this.selectedOptions.has(index) ? "selected" : ""}`;
+
+      if (this.selectionMode) {
+        optionItem.innerHTML = `
+                <input type="checkbox" class="option-checkbox" ${
+                  this.selectedOptions.has(index) ? "checked" : ""
+                } onchange="wheel.toggleOption(${index})">
+                <div class="option-color" style="background-color: ${
+                  option.color
+                }"></div>
+                <span class="option-text">${option.text}</span>
+            `;
+        optionItem.addEventListener("click", (e) => {
+          if (e.target.type !== "checkbox") {
+            this.toggleOption(index);
+          }
+        });
+      } else {
+        optionItem.innerHTML = `
+                <div class="option-color" style="background-color: ${option.color}"></div>
+                <span class="option-text">${option.text}</span>
+                <button class="remove-option" onclick="wheel.removeOption(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+      }
+
+      this.optionsList.appendChild(optionItem);
+    });
+
+    this.updateSelectedCount();
+  }
+
+  drawWheel() {
+    if (this.options.length === 0) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillStyle = "#f0f0f0";
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      this.ctx.fillStyle = "#666";
+      this.ctx.font = "20px Roboto";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(
+        "Add options to start",
+        this.canvas.width / 2,
+        this.canvas.height / 2
+      );
+      return;
+    }
+
+    const centerX = this.canvas.width / 2;
+    const centerY = this.canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 10;
+    const anglePerSlice = (2 * Math.PI) / this.options.length;
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Draw wheel segments
+    this.options.forEach((option, index) => {
+      const startAngle = index * anglePerSlice + this.currentRotation;
+      const endAngle = (index + 1) * anglePerSlice + this.currentRotation;
+
+      // Draw slice
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      this.ctx.lineTo(centerX, centerY);
+      this.ctx.fillStyle = option.color;
+      this.ctx.fill();
+
+      // Draw border
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      this.ctx.lineTo(centerX, centerY);
+      this.ctx.strokeStyle = "#fff";
+      this.ctx.lineWidth = 3;
+      this.ctx.stroke();
+
+      // Draw text
+      const textAngle = startAngle + anglePerSlice / 2;
+      const textRadius = radius * 0.7;
+      const textX = centerX + Math.cos(textAngle) * textRadius;
+      const textY = centerY + Math.sin(textAngle) * textRadius;
+
+      this.ctx.save();
+      this.ctx.translate(textX, textY);
+      this.ctx.rotate(textAngle + Math.PI / 2);
+
+      this.ctx.fillStyle = "#fff";
+      this.ctx.font = "bold 14px Roboto";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+
+      // Text shadow for better visibility
+      this.ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeText(option.text, 0, 0);
+      this.ctx.fillText(option.text, 0, 0);
+
+      this.ctx.restore();
+    });
+
+    // Draw center circle
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+    this.ctx.fillStyle = "#333";
+    this.ctx.fill();
+  }
+
+  spin() {
+    if (this.isSpinning || this.options.length === 0) return;
+
+    if (this.options.length < 2) {
+      this.showToast("Add at least 2 options to spin", "error");
+      return;
+    }
+
+    // Exit selection mode when spinning starts
+    if (this.selectionMode) {
+      this.toggleSelectionMode();
+    }
+
+    this.isSpinning = true;
+    this.spinBtn.disabled = true;
+    this.spinBtn.innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i><span>SPINNING</span>';
+
+    // Generate random spin
+    const minSpins = 5;
+    const maxSpins = 10;
+    const spins = Math.random() * (maxSpins - minSpins) + minSpins;
+    const finalRotation = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+
+    // Calculate winner
+    const normalizedRotation = finalRotation % (2 * Math.PI);
+    const anglePerSlice = (2 * Math.PI) / this.options.length;
+    const winningIndex =
+      Math.floor((2 * Math.PI - normalizedRotation) / anglePerSlice) %
+      this.options.length;
+    const winner = this.options[winningIndex];
+
+    // Animate spin
+    this.animateSpin(finalRotation, winner);
+  }
+
+  animateSpin(finalRotation, winner) {
+    const startRotation = this.currentRotation;
+    const totalRotation = finalRotation - startRotation;
+    const duration = 4000; // 4 seconds
+    const startTime = Date.now();
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function (cubic-bezier)
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+
+      this.currentRotation = startRotation + totalRotation * easeOut;
+      this.drawWheel();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        this.onSpinComplete(winner);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  onSpinComplete(winner) {
+    this.isSpinning = false;
+    this.spinBtn.disabled = false;
+    this.spinBtn.innerHTML = '<i class="fas fa-play"></i><span>SPIN</span>';
+
+    // Store current winner
+    this.currentWinner = winner;
+
+    // Update result display
+    this.resultText.textContent = winner.text;
+    this.resultDisplay.classList.add("winner");
+
+    // Update statistics
+    this.updateStatistics(winner.text);
+
+    // Show celebration
+    setTimeout(() => {
+      this.resultDisplay.classList.remove("winner");
+    }, 2000);
+
+    this.showToast(`Winner: ${winner.text}`, "success");
+
+    // Check if user wants to remove winner after spin
+    if (this.removeAfterWinCheckbox.checked && this.options.length > 2) {
+      setTimeout(() => {
+        this.showRemoveWinnerModal(winner);
+      }, 2500); // Show modal after celebration ends
+    }
+  }
+
+  updateStatistics(winner) {
+    if (!this.statistics[winner]) {
+      this.statistics[winner] = 0;
+    }
+    this.statistics[winner]++;
+    this.saveStatistics();
+    this.displayStatistics();
+  }
+
+  displayStatistics() {
+    this.statsDisplay.innerHTML = "";
+
+    if (Object.keys(this.statistics).length === 0) {
+      this.statsDisplay.innerHTML =
+        '<p style="text-align: center; color: #718096;">No spins yet</p>';
+      return;
+    }
+
+    // Sort by count (descending)
+    const sortedStats = Object.entries(this.statistics).sort(
+      (a, b) => b[1] - a[1]
+    );
+
+    sortedStats.forEach(([option, count]) => {
+      const statItem = document.createElement("div");
+      statItem.className = "stat-item";
+      statItem.innerHTML = `
+                <span class="stat-name">${option}</span>
+                <span class="stat-count">${count}</span>
+            `;
+      this.statsDisplay.appendChild(statItem);
+    });
+  }
+
+  clearAllOptions() {
+    if (this.isSpinning) return;
+
+    if (this.options.length === 0) return;
+
+    if (confirm("Are you sure you want to remove all options?")) {
+      this.options = [];
+      this.selectedOptions.clear();
+      this.updateOptionsDisplay();
+      this.drawWheel();
+      this.resultText.textContent = "Add options and spin!";
+      this.resultDisplay.classList.remove("winner");
+      this.showToast("All options cleared", "info");
+    }
+  }
+
+  showSaveModal() {
+    if (this.options.length === 0) {
+      this.showToast("Add options before saving", "error");
+      return;
+    }
+
+    this.saveModal.style.display = "block";
+    this.wheelNameInput.focus();
+  }
+
+  hideSaveModal() {
+    this.saveModal.style.display = "none";
+    this.wheelNameInput.value = "";
+  }
+
+  saveWheel() {
+    const name = this.wheelNameInput.value.trim();
+    if (name === "") {
+      this.showToast("Please enter a wheel name", "error");
+      return;
+    }
+
+    const savedWheels = this.getSavedWheels();
+    if (savedWheels[name]) {
+      if (!confirm("A wheel with this name already exists. Overwrite?")) {
+        return;
+      }
+    }
+
+    savedWheels[name] = {
+      options: [...this.options],
+      savedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem("spinWheelSavedWheels", JSON.stringify(savedWheels));
+    this.loadSavedWheels();
+    this.hideSaveModal();
+    this.showToast(`Wheel "${name}" saved successfully`, "success");
+  }
+
+  getSavedWheels() {
+    const saved = localStorage.getItem("spinWheelSavedWheels");
+    return saved ? JSON.parse(saved) : {};
+  }
+
+  loadSavedWheels() {
+    const savedWheels = this.getSavedWheels();
+    this.savedWheelsContainer.innerHTML = "";
+
+    if (Object.keys(savedWheels).length === 0) {
+      this.savedWheelsContainer.innerHTML =
+        '<p style="text-align: center; color: #718096;">No saved wheels</p>';
+      return;
+    }
+
+    Object.entries(savedWheels).forEach(([name, data]) => {
+      const wheelItem = document.createElement("div");
+      wheelItem.className = "saved-wheel-item";
+      wheelItem.innerHTML = `
+                <span class="saved-wheel-name">${name}</span>
+                <span class="saved-wheel-count">${data.options.length} options</span>
+                <button class="delete-saved-wheel" onclick="wheel.deleteSavedWheel('${name}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+
+      wheelItem.addEventListener("click", (e) => {
+        if (
+          !e.target.classList.contains("delete-saved-wheel") &&
+          !e.target.classList.contains("fas")
+        ) {
+          this.loadWheel(name, data);
+        }
+      });
+
+      this.savedWheelsContainer.appendChild(wheelItem);
+    });
+  }
+
+  loadWheel(name, data) {
+    if (this.isSpinning) return;
+
+    this.options = [...data.options];
+    this.selectedOptions.clear();
+    this.updateOptionsDisplay();
+    this.drawWheel();
+    this.resultText.textContent = "Wheel loaded! Click spin to start!";
+    this.resultDisplay.classList.remove("winner");
+    this.showToast(`Wheel "${name}" loaded successfully`, "success");
+  }
+
+  deleteSavedWheel(name) {
+    if (confirm(`Delete wheel "${name}"?`)) {
+      const savedWheels = this.getSavedWheels();
+      delete savedWheels[name];
+      localStorage.setItem("spinWheelSavedWheels", JSON.stringify(savedWheels));
+      this.loadSavedWheels();
+      this.showToast(`Wheel "${name}" deleted`, "info");
+    }
+  }
+
+  showLoadOptions() {
+    const savedWheels = this.getSavedWheels();
+    if (Object.keys(savedWheels).length === 0) {
+      this.showToast("No saved wheels found", "info");
+      return;
+    }
+    this.showToast("Click on a saved wheel to load it", "info");
+  }
+
+  saveStatistics() {
+    localStorage.setItem(
+      "spinWheelStatistics",
+      JSON.stringify(this.statistics)
+    );
+  }
+
+  loadStatistics() {
+    const saved = localStorage.getItem("spinWheelStatistics");
+    this.statistics = saved ? JSON.parse(saved) : {};
+    this.displayStatistics();
+  }
+
+  clearStatistics() {
+    if (Object.keys(this.statistics).length === 0) {
+      this.showToast("No statistics to clear", "info");
+      return;
+    }
+
+    if (
+      confirm(
+        "Are you sure you want to clear all statistics? This action cannot be undone."
+      )
+    ) {
+      this.statistics = {};
+      this.saveStatistics();
+      this.displayStatistics();
+      this.showToast("All statistics cleared", "success");
+    }
+  }
+
+  loadSettings() {
+    const saved = localStorage.getItem("spinWheelSettings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      this.removeAfterWinCheckbox.checked = settings.removeAfterWin || false;
+    }
+  }
+
+  saveSettings() {
+    const settings = {
+      removeAfterWin: this.removeAfterWinCheckbox.checked,
+    };
+    localStorage.setItem("spinWheelSettings", JSON.stringify(settings));
+
+    if (this.removeAfterWinCheckbox.checked) {
+      this.showToast("Will ask to remove winners after spinning", "info");
+    } else {
+      this.showToast("Winners will stay on wheel after spinning", "info");
+    }
+  }
+
+  showRemoveWinnerModal(winner) {
+    // Find the winner's index in the current options
+    const winnerIndex = this.options.findIndex(
+      (option) => option.text === winner.text && option.color === winner.color
+    );
+
+    if (winnerIndex === -1) return; // Winner not found (shouldn't happen)
+
+    // Update modal content
+    this.winnerColorDisplay.style.backgroundColor = winner.color;
+    this.winnerNameDisplay.textContent = winner.text;
+
+    // Store winner index for removal
+    this.winnerToRemoveIndex = winnerIndex;
+
+    // Show modal
+    this.removeWinnerModal.style.display = "block";
+  }
+
+  hideRemoveWinnerModal() {
+    this.removeWinnerModal.style.display = "none";
+    this.winnerToRemoveIndex = null;
+  }
+
+  confirmRemoveWinner() {
+    if (this.winnerToRemoveIndex !== null && this.options.length > 2) {
+      const removedOption = this.options[this.winnerToRemoveIndex];
+
+      // Remove the winner from options
+      this.options.splice(this.winnerToRemoveIndex, 1);
+
+      // Clear any selections that might be affected
+      this.selectedOptions.clear();
+
+      // Update display and redraw wheel
+      this.updateOptionsDisplay();
+      this.drawWheel();
+
+      // Show confirmation
+      this.showToast(`"${removedOption.text}" removed from wheel`, "info");
+    }
+
+    this.hideRemoveWinnerModal();
+  }
+
+  showToast(message, type = "info") {
+    this.toastMessage.textContent = message;
+    this.toast.className = `toast ${type} show`;
+
+    setTimeout(() => {
+      this.toast.classList.remove("show");
+    }, 3000);
+  }
+}
+
+// Initialize the wheel when the page loads
+let wheel;
+document.addEventListener("DOMContentLoaded", () => {
+  wheel = new SpinTheWheel();
+});
+
+// Handle window resize
+window.addEventListener("resize", () => {
+  if (wheel) {
+    wheel.drawWheel();
+  }
+});
+
+// Service Worker Registration for offline functionality
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then((registration) => {
+        console.log("SW registered: ", registration);
+      })
+      .catch((registrationError) => {
+        console.log("SW registration failed: ", registrationError);
+      });
+  });
+}

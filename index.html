@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spinova - BrAcKetz</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-dharmachakra"></i> Spin the Wheel</h1>
+        <p>Add your options and spin to get a random result!</p>
+      </header>
+
+      <div class="main-content">
+        <!-- Control Panel -->
+        <div class="control-panel">
+          <div class="card">
+            <h3><i class="fas fa-cogs"></i> Wheel Options</h3>
+            <div class="wheel-settings">
+              <label class="setting-toggle">
+                <input type="checkbox" id="removeAfterWin" />
+                <span class="toggle-slider"></span>
+                <span class="setting-label">Ask to remove winner</span>
+              </label>
+            </div>
+            <div class="input-group">
+              <textarea
+                id="optionInput"
+                placeholder="Enter options (one per line)...&#10;Example:&#10;Option 1&#10;Option 2&#10;Option 3"
+                rows="6"
+                class="option-textarea full-width"
+              ></textarea>
+              <div class="textarea-info">
+                You can add up to 50 options. Paste multiple lines to add them
+                all at once.
+              </div>
+              <button id="addOption" class="btn btn-primary full-width">
+                <i class="fas fa-plus"></i> Add Options
+              </button>
+            </div>
+
+            <div class="options-list" id="optionsList">
+              <!-- Options will be populated here -->
+            </div>
+
+            <div
+              class="bulk-selection-controls"
+              id="bulkControls"
+              style="display: none"
+            >
+              <div class="bulk-actions">
+                <button id="selectAll" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-check-square"></i> Select All
+                </button>
+                <button id="deselectAll" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-square"></i> Deselect All
+                </button>
+                <button id="removeSelected" class="btn btn-sm btn-danger">
+                  <i class="fas fa-trash"></i> Remove Selected
+                </button>
+                <span id="selectedCount" class="selected-count"
+                  >0 selected</span
+                >
+              </div>
+            </div>
+
+            <div class="control-buttons">
+              <button id="toggleSelection" class="btn btn-primary">
+                <i class="fas fa-check-square"></i> Select Mode
+              </button>
+              <button id="clearAll" class="btn btn-secondary">
+                <i class="fas fa-trash"></i> Clear All
+              </button>
+              <button id="saveWheel" class="btn btn-success">
+                <i class="fas fa-save"></i> Save Wheel
+              </button>
+              <button id="loadWheel" class="btn btn-info">
+                <i class="fas fa-folder-open"></i> Load Wheel
+              </button>
+            </div>
+          </div>
+
+          <!-- Saved Wheels -->
+          <div class="card">
+            <h3><i class="fas fa-history"></i> Saved Wheels</h3>
+            <div id="savedWheels" class="saved-wheels">
+              <!-- Saved wheels will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Wheel Container -->
+        <div class="wheel-container">
+          <div class="wheel-wrapper">
+            <canvas id="wheelCanvas" width="400" height="400"></canvas>
+            <div class="wheel-pointer">
+              <i class="fas fa-caret-down"></i>
+            </div>
+            <button id="spinButton" class="spin-button">
+              <i class="fas fa-play"></i>
+              <span>SPIN</span>
+            </button>
+          </div>
+
+          <!-- Result Display -->
+          <div class="result-container">
+            <div id="resultDisplay" class="result-display">
+              <div class="result-content">
+                <div class="result-icon">🎉</div>
+                <div class="result-text">
+                  <h3>Winner!</h3>
+                  <p id="resultText">Click spin to start!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statistics -->
+          <div class="stats-container">
+            <div class="stats-header">
+              <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+              <button
+                id="clearStats"
+                class="btn btn-sm btn-danger"
+                title="Clear all statistics"
+              >
+                <i class="fas fa-eraser"></i> Clear
+              </button>
+            </div>
+            <div id="statsDisplay" class="stats-display">
+              <!-- Stats will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal for Save Wheel -->
+      <div id="saveModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2><i class="fas fa-save"></i> Save Wheel</h2>
+          <input type="text" id="wheelName" placeholder="Enter wheel name..." />
+          <div class="modal-buttons">
+            <button id="confirmSave" class="btn btn-primary">Save</button>
+            <button id="cancelSave" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal for Remove Winner -->
+      <div id="removeWinnerModal" class="modal">
+        <div class="modal-content winner-modal">
+          <h2><i class="fas fa-trophy"></i> Winner Selected!</h2>
+          <div class="winner-info">
+            <div class="winner-color" id="winnerColorDisplay"></div>
+            <div class="winner-details">
+              <h3 id="winnerNameDisplay">Option Name</h3>
+              <p>Do you want to remove this option from the wheel?</p>
+            </div>
+          </div>
+          <div class="modal-buttons">
+            <button id="removeWinner" class="btn btn-danger">
+              <i class="fas fa-trash"></i> Remove Option
+            </button>
+            <button id="keepWinner" class="btn btn-success">
+              <i class="fas fa-keep"></i> Keep Option
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notifications -->
+      <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
