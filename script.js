@@ -3,57 +3,24 @@ class SpinTheWheel {
     this.canvas = document.getElementById("wheelCanvas");
     this.ctx = this.canvas.getContext("2d");
     this.options = [];
+    // Modern, clean color palette - cycles for up to 50 options
     this.colors = [
-      "#FF6B6B",
-      "#4ECDC4",
-      "#45B7D1",
-      "#96CEB4",
-      "#FFEAA7",
-      "#DDA0DD",
-      "#98D8C8",
-      "#F7DC6F",
-      "#BB8FCE",
-      "#85C1E9",
-      "#F8C471",
-      "#82E0AA",
-      "#F1948A",
-      "#D7BDE2",
-      "#FF9F43",
-      "#A8E6CF",
-      "#FFD3B6",
-      "#FF8B94",
-      "#C7CEEA",
-      "#B8F2E6",
-      "#FFA07A",
-      "#98FB98",
-      "#DDA0DD",
-      "#87CEEB",
-      "#F0E68C",
-      "#E6E6FA",
-      "#FFA500",
-      "#98FF98",
-      "#FF69B4",
-      "#AFEEEE",
-      "#FFB6C1",
-      "#ADD8E6",
-      "#F08080",
-      "#90EE90",
-      "#FFE4B5",
-      "#B0C4DE",
-      "#F0FFF0",
-      "#FFC0CB",
-      "#E0FFFF",
-      "#FFDAB9",
-      "#D8BFD8",
-      "#F5DEB3",
-      "#FAFAD2",
-      "#E6E6FA",
-      "#FFE4E1",
-      "#F0F8FF",
-      "#F5F5DC",
-      "#FDF5E6",
-      "#F0FFFF",
-      "#F5FFFA",
+      "#374151", // slate-700
+      "#475569", // slate-600
+      "#334155", // slate-700 (alternate)
+      "#6366F1", // indigo-500
+      "#2563EB", // blue-600 (primary)
+      "#3B82F6", // blue-500
+      "#06B6D4", // cyan-500
+      "#0891B2", // cyan-600
+      "#0ea5a4", // teal-500
+      "#10B981", // green-500
+      "#84CC16", // lime-400
+      "#F59E0B", // amber-500
+      "#F97316", // orange-500
+      "#EF4444", // red-500
+      "#D946EF", // fuchsia-500
+      "#8B5CF6", // violet-500
     ];
     this.isSpinning = false;
     this.currentRotation = 0;
@@ -61,6 +28,10 @@ class SpinTheWheel {
     this.selectionMode = false;
     this.selectedOptions = new Set();
     this.currentWinner = null;
+    this.highlightIndex = null;
+    this.highlightStartTime = null;
+    this.highlightDuration = 1600; // ms
+    this.highlightProgress = 0;
 
     this.initializeElements();
     this.bindEvents();
@@ -68,6 +39,14 @@ class SpinTheWheel {
     this.loadStatistics();
     this.loadSettings();
     this.drawWheel();
+
+    // read CSS variables for consistent theme usage
+    const computed = getComputedStyle(document.documentElement);
+    this.cssVars = {
+      textDark: computed.getPropertyValue("--text-dark") || "#0f172a",
+      textLight: computed.getPropertyValue("--text-light") || "#e6eef6",
+      primary: computed.getPropertyValue("--primary") || "#2563EB",
+    };
 
     // Add some default options if none exist
     if (this.options.length === 0) {
@@ -422,6 +401,16 @@ class SpinTheWheel {
       this.optionsList.appendChild(optionItem);
     });
 
+    // If options changed while highlighting, ensure highlight remains valid
+    if (
+      this.highlightIndex !== null &&
+      this.highlightIndex >= this.options.length
+    ) {
+      this.highlightIndex = null;
+      this.highlightStartTime = null;
+      this.highlightProgress = 0;
+    }
+
     this.updateSelectedCount();
   }
 
@@ -491,12 +480,43 @@ class SpinTheWheel {
       this.ctx.fillText(option.text, 0, 0);
 
       this.ctx.restore();
+
+      // If this slice is being highlighted, draw a pulsing overlay and glow
+      if (this.highlightIndex === index) {
+        const now = Date.now();
+        const elapsed = this.highlightStartTime
+          ? now - this.highlightStartTime
+          : 0;
+        const progress = Math.min(elapsed / this.highlightDuration, 1);
+
+        // Pulsing alpha using sine wave (0 -> 0.35)
+        const pulse = Math.sin(progress * Math.PI * 2);
+        const alpha = 0.35 * (0.5 + 0.5 * pulse);
+
+        // Overlay to brighten the wedge
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        this.ctx.lineTo(centerX, centerY);
+        this.ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        this.ctx.fill();
+        this.ctx.restore();
+
+        // Glow outline around the outer edge of the slice
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(centerX, centerY, radius + 6, startAngle, endAngle);
+        this.ctx.lineWidth = 10;
+        this.ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.8})`;
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
     });
 
-    // Draw center circle
+    // Draw center circle (use CSS var for consistent color on chosen theme)
     this.ctx.beginPath();
     this.ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
-    this.ctx.fillStyle = "#333";
+    this.ctx.fillStyle = this.cssVars ? this.cssVars.textDark : "#333";
     this.ctx.fill();
   }
 
@@ -525,6 +545,11 @@ class SpinTheWheel {
     const randomOffset = Math.random() * 2 * Math.PI;
     const finalRotation =
       this.currentRotation + spins * 2 * Math.PI + randomOffset;
+
+    // Reset any existing highlight
+    this.highlightIndex = null;
+    this.highlightStartTime = null;
+    this.highlightProgress = 0;
 
     // Animate spin - compute the winner after animation based on the
     // final rotation and the pointer position (top of the wheel)
@@ -571,6 +596,13 @@ class SpinTheWheel {
           ((winningIndex % this.options.length) + this.options.length) %
           this.options.length;
         const winner = this.options[winningIndex];
+
+        // start highlight animation for the winning slice
+        this.highlightIndex = winningIndex;
+        this.highlightStartTime = Date.now();
+        this.highlightDuration = 1600;
+        this.highlightProgress = 0;
+        this.animateHighlight();
 
         this.onSpinComplete(winner);
       }
@@ -873,6 +905,28 @@ class SpinTheWheel {
     setTimeout(() => {
       this.toast.classList.remove("show");
     }, 3000);
+  }
+
+  animateHighlight() {
+    if (this.highlightIndex === null) return;
+
+    const now = Date.now();
+    const elapsed = now - (this.highlightStartTime || now);
+    const progress = Math.min(elapsed / this.highlightDuration, 1);
+    this.highlightProgress = progress;
+
+    // Redraw wheel to reflect highlight progress
+    this.drawWheel();
+
+    if (progress < 1) {
+      requestAnimationFrame(() => this.animateHighlight());
+    } else {
+      // End of highlight animation
+      this.highlightIndex = null;
+      this.highlightStartTime = null;
+      this.highlightProgress = 0;
+      this.drawWheel();
+    }
   }
 
   // Public helper - compute which index would be selected given a rotation

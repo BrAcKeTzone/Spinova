@@ -7,9 +7,29 @@
 
 body {
   font-family: "Roboto", sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--bg-start), var(--bg-mid), var(--primary));
   min-height: 100vh;
-  color: #333;
+  color: var(--text-light);
+}
+
+:root {
+  /* Theme colors */
+  --bg-start: #0f172a;
+  --bg-mid: #06283d;
+  --primary: #2563EB;
+  --primary-dark: #1e40af;
+  --accent: #3B82F6;
+  --info: #06B6D4;
+  --info-dark: #0891B2;
+  --success: #10B981;
+  --success-dark: #059669;
+  --danger: #ef4444;
+  --danger-dark: #dc2626;
+
+  /* Text colors */
+  --text-light: #e6eef6; /* for dark backgrounds */
+  --text-dark: #0f172a; /* for light backgrounds (cards, panels) */
+  --muted: #6b7280; /* muted text for helper text */
 }
 
 .container {
@@ -53,11 +73,12 @@ header p {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-dark);
 }
 
 .card h3 {
   margin-bottom: 20px;
-  color: #4a5568;
+  color: var(--text-dark);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -107,8 +128,8 @@ header p {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.setting-toggle input[type="checkbox"]:checked + .toggle-slider {
-  background: #48bb78;
+ .setting-toggle input[type="checkbox"]:checked + .toggle-slider {
+  background: var(--success);
 }
 
 .setting-toggle input[type="checkbox"]:checked + .toggle-slider::before {
@@ -117,7 +138,7 @@ header p {
 
 .setting-label {
   font-weight: 500;
-  color: #4a5568;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -152,14 +173,14 @@ header p {
 
 #optionInput:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
 }
 
 .textarea-info {
   margin: -15px 0 10px;
   padding: 0 5px;
-  color: #718096;
+  color: var(--muted);
   font-size: 12px;
   font-style: italic;
 }
@@ -180,18 +201,18 @@ header p {
 }
 
 .btn-primary {
-  background: #667eea;
+  background: var(--primary);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #5a6fd8;
+  background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(30, 64, 175, 0.25);
 }
 
 .btn-secondary {
-  background: #718096;
+  background: var(--muted);
   color: white;
 }
 
@@ -200,30 +221,29 @@ header p {
 }
 
 .btn-success {
-  background: #48bb78;
+  background: var(--success);
   color: white;
 }
 
 .btn-success:hover {
-  background: #38a169;
+  background: var(--success-dark);
 }
 
 .btn-info {
-  background: #4299e1;
+  background: var(--info);
   color: white;
 }
 
 .btn-info:hover {
-  background: #3182ce;
+  background: var(--info-dark);
 }
 
 .btn-danger {
-  background: #f56565;
+  background: var(--danger);
   color: white;
 }
-
 .btn-danger:hover {
-  background: #e53e3e;
+  background: var(--danger-dark); /* slightly darker red */
 }
 
 /* Options List */
@@ -239,20 +259,21 @@ header p {
   align-items: center;
   padding: 12px 16px;
   margin-bottom: 8px;
-  background: #f7fafc;
+  background: #55606d; /* slightly darker muted */
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--primary);
   transition: all 0.3s ease;
 }
 
 .option-item:hover {
-  background: #edf2f7;
+  background: #f1f5f9;
   transform: translateX(5px);
 }
 
 .option-text {
   flex: 1;
   font-weight: 500;
+  color: var(--text-dark);
 }
 
 .option-color {
@@ -267,7 +288,7 @@ header p {
 .remove-option {
   background: none;
   border: none;
-  color: #f56565;
+  color: var(--danger);
   cursor: pointer;
   font-size: 16px;
   padding: 5px;
@@ -276,7 +297,7 @@ header p {
 }
 
 .remove-option:hover {
-  background: #fed7d7;
+  background: rgba(239, 68, 68, 0.08);
   transform: scale(1.1);
 }
 
@@ -292,7 +313,7 @@ header p {
 
 .bulk-selection-controls.active {
   background: #e6fffa;
-  border-color: #38b2ac;
+  border-color: var(--success);
 }
 
 .bulk-actions {
@@ -310,7 +331,7 @@ header p {
 .selected-count {
   margin-left: auto;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--muted);
   background: white;
   padding: 6px 12px;
   border-radius: 20px;
@@ -330,7 +351,7 @@ header p {
 
 .option-item.selected {
   background: #c6f6d5 !important;
-  border-left-color: #38a169;
+  border-left-color: var(--success-dark);
   transform: translateX(0);
 }
 
@@ -341,7 +362,7 @@ header p {
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  accent-color: #38a169;
+  accent-color: var(--success-dark);
   cursor: pointer;
 }
 
@@ -381,7 +402,7 @@ header p {
   left: 50%;
   transform: translateX(-50%);
   font-size: 30px;
-  color: #667eea;
+  color: var(--primary);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   z-index: 10;
 }
@@ -394,7 +415,7 @@ header p {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border: 4px solid white;
   color: white;
   font-weight: bold;
@@ -449,7 +470,7 @@ header p {
 }
 
 .result-display.winner {
-  border-color: #48bb78;
+  border-color: var(--success);
   background: linear-gradient(135deg, #f0fff4, #c6f6d5);
   animation: celebration 0.6s ease-in-out;
 }
@@ -494,14 +515,14 @@ header p {
 
 .result-text h3 {
   margin-bottom: 5px;
-  color: #2d3748;
+  color: var(--text-dark);
   font-weight: 600;
 }
 
 .result-text p {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--muted);
 }
 
 /* Statistics */
@@ -522,7 +543,7 @@ header p {
 
 .stats-header h3 {
   margin: 0;
-  color: #4a5568;
+  color: var(--text-dark);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -541,7 +562,7 @@ header p {
   padding: 10px 15px;
   background: #f7fafc;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--primary);
 }
 
 .stat-name {
@@ -550,7 +571,7 @@ header p {
 
 .stat-count {
   font-weight: bold;
-  color: #667eea;
+  color: var(--primary);
 }
 
 /* Saved Wheels */
@@ -583,14 +604,14 @@ header p {
 
 .saved-wheel-count {
   font-size: 12px;
-  color: #718096;
+  color: var(--muted);
   margin-right: 10px;
 }
 
 .delete-saved-wheel {
   background: none;
   border: none;
-  color: #f56565;
+  color: var(--danger);
   cursor: pointer;
   padding: 5px;
   border-radius: 4px;
@@ -598,7 +619,7 @@ header p {
 }
 
 .delete-saved-wheel:hover {
-  background: #fed7d7;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 /* Modal */
@@ -649,20 +670,20 @@ header p {
   position: absolute;
   top: 15px;
   right: 20px;
-  color: #aaa;
+  color: var(--muted);
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
   transition: color 0.3s ease;
 }
 
-.close:hover {
-  color: #333;
+close:hover {
+  color: var(--text-dark);
 }
 
 .modal h2 {
   margin-bottom: 20px;
-  color: #2d3748;
+  color: var(--text-dark);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -679,7 +700,7 @@ header p {
 
 .modal input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary);
 }
 
 .modal-buttons {
@@ -702,7 +723,7 @@ header p {
   padding: 20px;
   background: #f0fff4;
   border-radius: 12px;
-  border: 2px solid #48bb78;
+  border: 2px solid var(--success);
 }
 
 .winner-color {
@@ -721,13 +742,13 @@ header p {
 
 .winner-details h3 {
   margin-bottom: 5px;
-  color: #2d3748;
+  color: var(--text-dark);
   font-weight: 600;
   font-size: 1.2rem;
 }
 
 .winner-details p {
-  color: #4a5568;
+  color: var(--muted);
   margin: 0;
 }
 
@@ -740,7 +761,7 @@ header p {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: #2d3748;
+  background: var(--text-dark);
   color: white;
   padding: 15px 20px;
   border-radius: 8px;
@@ -757,15 +778,15 @@ header p {
 }
 
 .toast.success {
-  background: #48bb78;
+  background: var(--success);
 }
 
 .toast.error {
-  background: #f56565;
+  background: var(--danger);
 }
 
 .toast.info {
-  background: #4299e1;
+  background: var(--info);
 }
 
 /* Spinning Animation */
