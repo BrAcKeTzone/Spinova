@@ -845,7 +845,9 @@ header p {
     width: 60px;
     height: 60px;
   }
-  .wheel-pointer { top: -18px; }
+  .wheel-pointer {
+    top: -18px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -897,7 +899,9 @@ header p {
     width: 70px;
     height: 70px;
   }
-  .wheel-pointer { top: -15px; }
+  .wheel-pointer {
+    top: -15px;
+  }
 
   .card {
     padding: 15px;
