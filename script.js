@@ -417,6 +417,19 @@ class SpinTheWheel {
   }
 
   drawWheel() {
+    // Ensure canvas size matches the CSS display size and scale for DPR
+    const displayWidth = this.canvas.clientWidth;
+    const displayHeight = this.canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    if (
+      this.canvas.width !== Math.floor(displayWidth * dpr) ||
+      this.canvas.height !== Math.floor(displayHeight * dpr)
+    ) {
+      this.canvas.width = Math.floor(displayWidth * dpr);
+      this.canvas.height = Math.floor(displayHeight * dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
     if (this.options.length === 0) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.fillStyle = "#f0f0f0";
@@ -433,8 +446,8 @@ class SpinTheWheel {
       return;
     }
 
-    const centerX = this.canvas.width / 2;
-    const centerY = this.canvas.height / 2;
+    const centerX = displayWidth / 2;
+    const centerY = displayHeight / 2;
     const radius = Math.min(centerX, centerY) - 10;
     const anglePerSlice = (2 * Math.PI) / this.options.length;
 
