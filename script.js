@@ -66,6 +66,8 @@ class SpinTheWheel {
     this.loadWheelBtn = document.getElementById("loadWheel");
     this.savedWheelsContainer = document.getElementById("savedWheels");
     this.statsDisplay = document.getElementById("statsDisplay");
+      // Accessibility role for stats list
+      if (this.statsDisplay) this.statsDisplay.setAttribute("role", "list");
     this.clearStatsBtn = document.getElementById("clearStats");
 
     // Bulk selection elements
@@ -667,10 +669,20 @@ class SpinTheWheel {
     sortedStats.forEach(([option, count]) => {
       const statItem = document.createElement("div");
       statItem.className = "stat-item";
-      statItem.innerHTML = `
-                <span class="stat-name">${option}</span>
-                <span class="stat-count">${count}</span>
-            `;
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "stat-name";
+      nameEl.textContent = option;
+      nameEl.title = option; // show full name on hover
+
+      const countEl = document.createElement("span");
+      countEl.className = "stat-count";
+      countEl.textContent = count;
+      countEl.setAttribute("aria-label", `${count} wins`);
+
+      statItem.appendChild(nameEl);
+      statItem.appendChild(countEl);
+      statItem.setAttribute("role", "listitem");
       this.statsDisplay.appendChild(statItem);
     });
   }

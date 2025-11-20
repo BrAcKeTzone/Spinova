@@ -264,7 +264,7 @@ header p {
   align-items: center;
   padding: 12px 16px;
   margin-bottom: 8px;
-  background: #55606d; /* slightly darker muted */
+  background: #f7fafc;
   border-radius: 8px;
   border-left: 4px solid var(--primary);
   transition: all 0.3s ease;
@@ -568,15 +568,28 @@ header p {
   background: #f7fafc;
   border-radius: 8px;
   border-left: 4px solid var(--primary);
+  gap: 12px; /* space between name and count */
 }
 
 .stat-name {
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 70px);
 }
 
 .stat-count {
   font-weight: bold;
-  color: var(--primary);
+  color: white;
+  background: var(--primary);
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+  min-width: 48px;
+  text-align: center;
 }
 
 /* Saved Wheels */
@@ -682,7 +695,7 @@ header p {
   transition: color 0.3s ease;
 }
 
-close:hover {
+.close:hover {
   color: var(--text-dark);
 }
 
@@ -849,6 +862,17 @@ close:hover {
   .control-buttons {
     grid-template-columns: 1fr;
   }
+
+  /* Make stats more mobile-friendly */
+  .stat-item {
+    gap: 8px;
+  }
+  .stat-name {
+    max-width: 60%;
+  }
+  .stat-count {
+    min-width: 48px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -864,6 +888,18 @@ close:hover {
 
   .card {
     padding: 15px;
+  }
+
+  /* Stack stats on narrow screens for readability */
+  .stat-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .stat-count {
+    min-width: 0;
+    text-align: left;
+    font-size: 13px;
   }
 }
 
