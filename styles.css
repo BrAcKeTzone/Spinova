@@ -7,7 +7,12 @@
 
 body {
   font-family: "Roboto", sans-serif;
-  background: linear-gradient(135deg, var(--bg-start), var(--bg-mid), var(--primary));
+  background: linear-gradient(
+    135deg,
+    var(--bg-start),
+    var(--bg-mid),
+    var(--primary)
+  );
   min-height: 100vh;
   color: var(--text-light);
 }
@@ -16,12 +21,12 @@ body {
   /* Theme colors */
   --bg-start: #0f172a;
   --bg-mid: #06283d;
-  --primary: #2563EB;
+  --primary: #2563eb;
   --primary-dark: #1e40af;
-  --accent: #3B82F6;
-  --info: #06B6D4;
-  --info-dark: #0891B2;
-  --success: #10B981;
+  --accent: #3b82f6;
+  --info: #06b6d4;
+  --info-dark: #0891b2;
+  --success: #10b981;
   --success-dark: #059669;
   --danger: #ef4444;
   --danger-dark: #dc2626;
@@ -128,7 +133,7 @@ header p {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
- .setting-toggle input[type="checkbox"]:checked + .toggle-slider {
+.setting-toggle input[type="checkbox"]:checked + .toggle-slider {
   background: var(--success);
 }
 
