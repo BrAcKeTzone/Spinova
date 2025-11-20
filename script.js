@@ -66,8 +66,8 @@ class SpinTheWheel {
     this.loadWheelBtn = document.getElementById("loadWheel");
     this.savedWheelsContainer = document.getElementById("savedWheels");
     this.statsDisplay = document.getElementById("statsDisplay");
-      // Accessibility role for stats list
-      if (this.statsDisplay) this.statsDisplay.setAttribute("role", "list");
+    // Accessibility role for stats list
+    if (this.statsDisplay) this.statsDisplay.setAttribute("role", "list");
     this.clearStatsBtn = document.getElementById("clearStats");
 
     // Bulk selection elements
