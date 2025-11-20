@@ -518,25 +518,20 @@ class SpinTheWheel {
     this.spinBtn.innerHTML =
       '<i class="fas fa-spinner fa-spin"></i><span>SPINNING</span>';
 
-    // Generate random spin
+    // Generate random spin (relative to current rotation)
     const minSpins = 5;
     const maxSpins = 10;
     const spins = Math.random() * (maxSpins - minSpins) + minSpins;
-    const finalRotation = spins * 2 * Math.PI + Math.random() * 2 * Math.PI;
+    const randomOffset = Math.random() * 2 * Math.PI;
+    const finalRotation =
+      this.currentRotation + spins * 2 * Math.PI + randomOffset;
 
-    // Calculate winner
-    const normalizedRotation = finalRotation % (2 * Math.PI);
-    const anglePerSlice = (2 * Math.PI) / this.options.length;
-    const winningIndex =
-      Math.floor((2 * Math.PI - normalizedRotation) / anglePerSlice) %
-      this.options.length;
-    const winner = this.options[winningIndex];
-
-    // Animate spin
-    this.animateSpin(finalRotation, winner);
+    // Animate spin - compute the winner after animation based on the
+    // final rotation and the pointer position (top of the wheel)
+    this.animateSpin(finalRotation);
   }
 
-  animateSpin(finalRotation, winner) {
+  animateSpin(finalRotation) {
     const startRotation = this.currentRotation;
     const totalRotation = finalRotation - startRotation;
     const duration = 4000; // 4 seconds
@@ -556,6 +551,27 @@ class SpinTheWheel {
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
+        // compute the winner based on final currentRotation
+        const normalizedRotation =
+          ((this.currentRotation % (2 * Math.PI)) + 2 * Math.PI) %
+          (2 * Math.PI);
+
+        // normalize stored rotation so it doesn't grow unbounded across multiple spins
+        this.currentRotation = normalizedRotation;
+        const anglePerSlice = (2 * Math.PI) / this.options.length;
+        const pointerAngle = -Math.PI / 2; // pointer points up at 12 o'clock
+
+        // find the slice that covers the pointer angle
+        let winningIndex = Math.floor(
+          (pointerAngle - normalizedRotation) / anglePerSlice
+        );
+
+        // normalize index to range 0..len-1
+        winningIndex =
+          ((winningIndex % this.options.length) + this.options.length) %
+          this.options.length;
+        const winner = this.options[winningIndex];
+
         this.onSpinComplete(winner);
       }
     };
@@ -857,6 +873,22 @@ class SpinTheWheel {
     setTimeout(() => {
       this.toast.classList.remove("show");
     }, 3000);
+  }
+
+  // Public helper - compute which index would be selected given a rotation
+  computeWinnerIndexFromRotation(rotation) {
+    if (this.options.length === 0) return -1;
+    const normalizedRotation =
+      ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const anglePerSlice = (2 * Math.PI) / this.options.length;
+    const pointerAngle = -Math.PI / 2;
+    let winningIndex = Math.floor(
+      (pointerAngle - normalizedRotation) / anglePerSlice
+    );
+    winningIndex =
+      ((winningIndex % this.options.length) + this.options.length) %
+      this.options.length;
+    return winningIndex;
   }
 }
 
